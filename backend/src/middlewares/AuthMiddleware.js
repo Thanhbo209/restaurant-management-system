@@ -11,16 +11,17 @@ if (!JWT_SECRET) {
 
 export const protect = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const decoded = verifyToken(token);
+    const token = authHeader.slice(7).trim();
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
 
     const user = await User.findById(decoded.id).select("-password");
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    if (!user || !user.isActive) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     req.user = user;
