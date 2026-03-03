@@ -1,0 +1,21 @@
+import express from "express";
+import dotenv from "dotenv";
+import { route } from "./routes/index.js";
+import connectDb from "./lib/connectDb.js";
+
+dotenv.config();
+const app = express();
+app.use(express.json());
+const PORT = process.env.PORT || 3000;
+const connectionString = process.env.MOMGODB_URI;
+
+connectDb(connectionString);
+app.get("/", (req, res) => {
+  res.send("Welcome to the Restaurant Management System API!");
+});
+
+route(app);
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
