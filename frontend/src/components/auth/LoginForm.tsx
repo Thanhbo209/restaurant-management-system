@@ -1,7 +1,5 @@
 import { EyeIcon } from "@/components/auth/EyeIcon";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -12,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { useNavigate } from "react-router";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 // ================= SCHEMA =================
 const userSchema = z.object({
   email: z.string().email("Email không hợp lệ"),
@@ -44,24 +43,33 @@ const LoginForm = () => {
     try {
       setLoading(true);
 
-      const res = await axios.post("http://localhost:3000/api/auth/login", {
-        email: data.email,
-        password: data.password,
-      });
+      const res = await axios.post(
+        `${API_BASE_URL}/api/auth/login`,
+        {
+          email: data.email,
+          password: data.password,
+        },
+        { withCredentials: true },
+      );
 
-      console.log("LOGIN SUCCESS:", res.data);
+      const token = res.data?.token;
+      const user = res.data?.user;
+      if (!token || !user) return;
 
-      if (res.data?.token) {
-        localStorage.setItem("token", res.data.token);
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      if (user.role === "admin") {
+        navigate("/admin/dashboard");
+        return;
       }
 
-      if (res.data?.user) {
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-      }
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
 
-      navigate("/admin/dashboard");
+      navigate("/login");
     } catch (error: unknown) {
-      console.log("FULL ERROR:", error);
+      console.error("Login failed", error);
     } finally {
       setLoading(false);
     }
@@ -103,6 +111,8 @@ const LoginForm = () => {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2"
+                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                aria-pressed={showPassword}
               >
                 <EyeIcon show={showPassword} />
               </button>
@@ -114,15 +124,11 @@ const LoginForm = () => {
           </div>
 
           {/* Remember */}
-          <div className="flex items-center justify-between text-sm">
-            <FieldGroup className="mx-auto">
-              <Field orientation="horizontal">
-                <Checkbox id="remember" {...register("remember")} />
-                <FieldLabel htmlFor="remember">Ghi nhớ</FieldLabel>
-              </Field>
-            </FieldGroup>
-
-            <a className="text-primary hover:text-foreground transition">
+          <div className="flex items-center justify-start text-sm">
+            <a
+              href="/forgot-password"
+              className="text-primary hover:text-foreground transition"
+            >
               Quên mật khẩu?
             </a>
           </div>

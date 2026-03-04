@@ -1,5 +1,5 @@
+import AuthUserGreet from "@/components/auth/AuthUserGreet";
 import LoginForm from "@/components/auth/LoginForm";
-import { Button } from "@/components/ui/button";
 import { useMemo } from "react";
 
 const Login = () => {
@@ -24,30 +24,7 @@ const Login = () => {
   };
 
   if (token && username) {
-    return (
-      <section className="min-h-screen flex items-center justify-center px-4">
-        <div className="w-full max-w-sm text-center space-y-6">
-          <div className="bg-card border border-gray-800 rounded-2xl p-8 shadow-xl">
-            <h1 className="text-2xl font-bold">
-              Xin chào, <span className="text-primary">{username}</span> 👋
-            </h1>
-
-            <p className="text-sm text-muted-foreground mt-2">
-              Bạn đã đăng nhập hệ thống
-            </p>
-            <a href="/admin"></a>
-
-            <Button
-              onClick={handleLogout}
-              className="w-full mt-6 rounded-xl"
-              variant="destructive"
-            >
-              Đăng xuất
-            </Button>
-          </div>
-        </div>
-      </section>
-    );
+    return <AuthUserGreet handleLogout={handleLogout} username={username} />;
   }
 
   return (
