@@ -1,28 +1,9 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Users,
-  Package,
-  ShoppingCart,
-  BarChart3,
-  Settings,
-  LogOut,
-  ChevronRight,
-  Zap,
-} from "lucide-react";
-import { SidebarItem, type NavItem } from "@/components/admin/SidebarItem";
+import { LogOut, ChevronRight, Zap } from "lucide-react";
+import { SidebarItem } from "@/components/admin/SidebarItem";
 import Navbar from "@/components/admin/Navbar";
-
-// ─── Config ───────────────────────────────────────────────────────────────────
-const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
-  { label: "Users", path: "/admin/users", icon: Users, badge: 3 },
-  { label: "Products", path: "/admin/products", icon: Package },
-  { label: "Orders", path: "/admin/orders", icon: ShoppingCart, badge: 12 },
-  { label: "Analytics", path: "/admin/analytics", icon: BarChart3 },
-  { label: "Settings", path: "/admin/settings", icon: Settings },
-];
+import { ADMIN_NAV_ITEMS } from "@/constants/sidebar";
 
 // ─── Admin Layout ─────────────────────────────────────────────────────────────
 const AdminLayout = () => {
@@ -65,7 +46,7 @@ const AdminLayout = () => {
 
         {/* Nav */}
         <nav className="flex-1 overflow-x-hidden px-3 py-6 space-y-3">
-          {NAV_ITEMS.map((item) => (
+          {ADMIN_NAV_ITEMS.map((item) => (
             <SidebarItem key={item.path} item={item} collapsed={collapsed} />
           ))}
         </nav>
