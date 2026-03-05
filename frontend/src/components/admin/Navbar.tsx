@@ -1,4 +1,5 @@
 import AppBreadcrumb from "@/components/app-breadcrumb";
+import { ModeToggle } from "@/components/mode-toggle";
 import type { User } from "@/types/user";
 import { Bell, Menu, Search, X } from "lucide-react";
 
@@ -52,6 +53,7 @@ const Navbar = ({ setMobileOpen, mobileOpen, user }: NavbarProps) => {
           alt={user?.name || "avatar"}
           className="w-8 h-8 rounded-full ring-2 ring-ring cursor-pointer"
         />
+        <ModeToggle />
       </header>
     </div>
   );

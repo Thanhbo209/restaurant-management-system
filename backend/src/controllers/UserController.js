@@ -1,6 +1,6 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
-
+import mongoose from "mongoose";
 export default class UserController {
   // GET /api/users
   static async list(req, res) {
@@ -17,6 +17,9 @@ export default class UserController {
   static async get(req, res) {
     try {
       const { id } = req.params;
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "Invalid user id" });
+      }
       const user = await User.findById(id).select("-password");
       if (!user) return res.status(404).json({ message: "User not found" });
       res.json(user);
@@ -69,13 +72,21 @@ export default class UserController {
   static async update(req, res) {
     try {
       const { id } = req.params;
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "Invalid user id" });
+      }
       const updates = { ...req.body };
-      if (updates.password) {
+      if (Object.prototype.hasOwnProperty.call(updates, "password")) {
+        if (!updates.password || !String(updates.password).trim()) {
+          return res.status(400).json({ message: "Password cannot be empty" });
+        }
         updates.password = await bcrypt.hash(updates.password, 10);
       }
 
       const user = await User.findByIdAndUpdate(id, updates, {
         new: true,
+        runValidators: true,
+        context: "query",
       }).select("-password");
       if (!user) return res.status(404).json({ message: "User not found" });
       res.json(user);
@@ -90,6 +101,9 @@ export default class UserController {
     try {
       const { id } = req.params;
       const user = await User.findByIdAndDelete(id).select("-password");
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "Invalid user id" });
+      }
       if (!user) return res.status(404).json({ message: "User not found" });
       res.json({ message: "User deleted" });
     } catch (error) {

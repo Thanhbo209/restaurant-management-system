@@ -15,7 +15,7 @@ function App() {
         <Route path="/admin" element={<ProtectedAdminRoute />}>
           <Route element={<AdminLayout />}>
             <Route path="dashboard" index element={<Dashboard />} />
-            <Route path="users" index element={<UsersPage />} />
+            <Route path="users" element={<UsersPage />} />
           </Route>
         </Route>
       </Routes>

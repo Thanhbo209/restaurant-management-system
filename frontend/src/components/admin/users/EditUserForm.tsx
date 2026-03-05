@@ -9,6 +9,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import type { User, Role } from "@/types/user";
 
 type Props = {
@@ -82,10 +91,15 @@ export default function EditUserForm({ user, onUpdated, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-card border border-border rounded-lg p-6 w-full max-w-md">
-        <h3 className="text-lg font-semibold mb-4">Chỉnh sửa người dùng</h3>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Chỉnh sửa người dùng</DialogTitle>
+          <DialogDescription>
+            Chỉnh sửa thông tin và quyền truy cập của người dùng.
+          </DialogDescription>
+        </DialogHeader>
+
         <div className="grid gap-5">
           <div>
             <Label>Name</Label>
@@ -126,17 +140,17 @@ export default function EditUserForm({ user, onUpdated, onClose }: Props) {
             />
             <Label htmlFor="active">Hoạt động</Label>
           </div>
-
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="ghost" onClick={onClose}>
-              Hủy
-            </Button>
-            <Button onClick={submit} disabled={loading}>
-              {loading ? "Lưu..." : "Lưu"}
-            </Button>
-          </div>
         </div>
-      </div>
-    </div>
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="ghost">Hủy</Button>
+          </DialogClose>
+          <Button onClick={submit} disabled={loading}>
+            {loading ? "Lưu..." : "Lưu"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

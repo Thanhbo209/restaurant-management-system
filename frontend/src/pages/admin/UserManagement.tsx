@@ -15,13 +15,12 @@ import UsersFilters from "@/components/admin/users/UsersFilters";
 import EditUserForm from "@/components/admin/users/EditUserForm";
 import { USER_STATS } from "@/constants/stats";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL as string | undefined;
 // ─── Live data: fetch users from API ───────────────────────────────────────────
 const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const API_BASE_URL = import.meta.env.VITE_API_URL as string | undefined;
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -44,10 +43,10 @@ const useUsers = () => {
         const data = await res.json();
         setUsers(data ?? []);
       } else if (res.status === 401) {
-        // unauthorized — clear local auth and redirect to login by reloading
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        setUsers([]);
+        window.location.href = "/login";
+        return;
       } else {
         const text = await res.text();
         setError(`Failed to load users: ${res.status} ${text}`);
@@ -83,7 +82,6 @@ const UsersPage = () => {
   const handleDelete = async (id: string) => {
     if (!confirm("Xoá người dùng này?")) return;
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL as string | undefined;
       const base = API_BASE_URL ? API_BASE_URL.replace(/\/$/, "") : "";
       const url = base ? `${base}/api/users/${id}` : `/api/users/${id}`;
       const token = localStorage.getItem("token");
@@ -92,7 +90,7 @@ const UsersPage = () => {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
       if (res.ok) {
-        setUsers(users.filter((u) => u._id !== id));
+        setUsers((prev) => prev.filter((u) => u._id !== id));
       } else {
         const text = await res.text();
         console.error("Delete failed:", res.status, text);
@@ -106,7 +104,6 @@ const UsersPage = () => {
 
   const toggleActive = async (id: string, current: boolean) => {
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL as string | undefined;
       const base = API_BASE_URL ? API_BASE_URL.replace(/\/$/, "") : "";
       const url = base ? `${base}/api/users/${id}` : `/api/users/${id}`;
       const token = localStorage.getItem("token");

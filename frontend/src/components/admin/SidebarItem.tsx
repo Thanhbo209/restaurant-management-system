@@ -29,7 +29,7 @@ export const SidebarItem = (props: {
       end={item.path === "/admin"}
       className={[
         "group relative flex items-center gap-4 px-3 py-2.5 rounded-xl",
-        "transition-all duration-200 font-medium text-sm",
+        " font-medium text-sm",
         isActive
           ? "bg-primary text-background font-bold"
           : "text-muted-foreground hover:bg-secondary hover:text-foreground",
