@@ -10,8 +10,8 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ["admin", "staff", "customer", "chef"],
-      default: "customer",
+      enum: ["admin", "staff", "chef"],
+      default: "staff",
     },
     isActive: { type: Boolean, default: true },
     avatarUrl: {
