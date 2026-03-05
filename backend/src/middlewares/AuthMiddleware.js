@@ -33,3 +33,17 @@ export const protect = async (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 };
+
+// middleware to allow only admin users
+export const restrictToAdmin = (req, res, next) => {
+  try {
+    const user = req.user;
+    if (!user || user.role !== "admin") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    next();
+  } catch (err) {
+    console.error("restrictToAdmin error:", err);
+    return res.status(403).json({ message: "Forbidden" });
+  }
+};
