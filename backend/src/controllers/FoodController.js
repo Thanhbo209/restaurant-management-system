@@ -1,4 +1,5 @@
 import Food from "../models/Food.js";
+import Category from "../models/Category.js";
 import mongoose from "mongoose";
 
 export default class FoodController {
@@ -15,8 +16,18 @@ export default class FoodController {
       } = req.query ?? {};
 
       const filter = {};
+      const parsedLimit = Number.parseInt(String(limit), 10);
+      const parsedSkip = Number.parseInt(String(skip), 10);
+      const safeLimit = Number.isFinite(parsedLimit)
+        ? Math.min(Math.max(parsedLimit, 1), 100)
+        : 100;
+      const safeSkip = Number.isFinite(parsedSkip)
+        ? Math.max(parsedSkip, 0)
+        : 0;
+      const escapeRegex = (value) =>
+        value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       if (q) {
-        const regex = new RegExp(String(q), "i");
+        const regex = new RegExp(escapeRegex(String(q)), "i");
         filter.$or = [{ name: regex }, { description: regex }];
       }
       if (category && mongoose.Types.ObjectId.isValid(String(category))) {
@@ -30,8 +41,8 @@ export default class FoodController {
       }
 
       const foods = await Food.find(filter)
-        .limit(Number(limit))
-        .skip(Number(skip))
+        .limit(safeLimit)
+        .skip(safeSkip)
         .populate("category");
 
       res.json(foods);
@@ -74,6 +85,25 @@ export default class FoodController {
           .status(400)
           .json({ message: "name, price and category are required" });
       }
+
+      // validate category id and existence
+      if (!mongoose.Types.ObjectId.isValid(String(category))) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "category is required and must refer to an existing category",
+          });
+      }
+      const catExists = await Category.exists({ _id: category });
+      if (!catExists) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "category is required and must refer to an existing category",
+          });
+      }
       const food = await Food.create({
         name,
         description,
@@ -98,6 +128,30 @@ export default class FoodController {
         return res.status(400).json({ message: "Invalid food id" });
       }
       const updates = { ...req.body };
+
+      // If category is being updated, validate it refers to an existing category
+      if (
+        typeof updates.category !== "undefined" &&
+        updates.category !== null
+      ) {
+        if (!mongoose.Types.ObjectId.isValid(String(updates.category))) {
+          return res
+            .status(400)
+            .json({
+              message:
+                "category is required and must refer to an existing category",
+            });
+        }
+        const catExists = await Category.exists({ _id: updates.category });
+        if (!catExists) {
+          return res
+            .status(400)
+            .json({
+              message:
+                "category is required and must refer to an existing category",
+            });
+        }
+      }
       const food = await Food.findByIdAndUpdate(id, updates, {
         new: true,
         runValidators: true,

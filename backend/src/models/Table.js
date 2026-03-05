@@ -6,11 +6,21 @@ const tableSchema = new mongoose.Schema(
       type: Number,
       required: true,
       unique: true,
+      min: 1,
+      validate: {
+        validator: Number.isInteger,
+        message: "tableNumber must be an integer",
+      },
     },
 
     capacity: {
       type: Number,
       default: 4,
+      min: 1,
+      validate: {
+        validator: Number.isInteger,
+        message: "capacity must be an integer",
+      },
     },
 
     qrCodeUrl: {
@@ -21,17 +31,6 @@ const tableSchema = new mongoose.Schema(
       type: String,
       enum: ["available", "occupied", "reserved"],
       default: "available",
-    },
-    ratingAverage: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5,
-    },
-
-    ratingCount: {
-      type: Number,
-      default: 0,
     },
   },
   { timestamps: true },

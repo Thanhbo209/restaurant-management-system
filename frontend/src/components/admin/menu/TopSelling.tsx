@@ -1,5 +1,6 @@
 interface TopSellingProps {
   TopSellingFood: {
+    id: string;
     name: string;
     sold: number;
     revenue: string;
@@ -13,7 +14,7 @@ const TopSelling = ({ TopSellingFood }: TopSellingProps) => {
     <div className="space-y-2">
       {TopSellingFood.map((item, i) => (
         <div
-          key={item.name}
+          key={item.id}
           className="flex items-center gap-3 bg-card border border-border hover:border-ring rounded-xl p-3 transition-colors group"
         >
           <span

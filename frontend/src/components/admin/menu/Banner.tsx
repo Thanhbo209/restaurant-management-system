@@ -8,7 +8,7 @@ const Banner = ({ availableItems, featuredItems }: BannerProps) => {
     <div className="relative rounded-2xl overflow-hidden h-44 shadow-2xl shadow-black/40">
       <img
         src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&h=400&fit=crop"
-        alt="banner"
+        alt="menu-banner"
         className="absolute inset-0 w-full h-full object-cover"
       />
       <div className="absolute inset-0 bg-linear-to-r from-muted/60 via-muted/20 to-transparent" />

@@ -16,19 +16,27 @@ export default function CategoryModal({
   const [name, setName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [saving, setSaving] = useState(false);
-
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const API_BASE_URL = import.meta.env.VITE_API_URL as string | undefined;
   const base = API_BASE_URL ? API_BASE_URL.replace(/\/$/, "") : "";
 
   if (!modalOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-foreground/10 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="category-modal-title"
+      className="fixed inset-0 bg-foreground/10 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+    >
       <div className="bg-card border border-border rounded-2xl w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="text-base font-bold">Thêm danh mục</h2>
+          <h2 id="category-modal-title" className="text-base font-bold">
+            Thêm danh mục
+          </h2>
           <button
             onClick={onClose}
+            aria-label="Đóng modal"
             className="w-8 h-8 rounded-xl hover:bg-destructive flex items-center justify-center text-muted-foreground hover:text-white transition-colors"
           >
             <svg
@@ -76,6 +84,7 @@ export default function CategoryModal({
             onClick={async () => {
               if (!name.trim()) return;
               setSaving(true);
+              setErrorMsg(null);
               try {
                 const token = localStorage.getItem("token");
                 const headers: Record<string, string> = {
@@ -106,6 +115,7 @@ export default function CategoryModal({
                 onClose();
               } catch (err) {
                 console.error("Failed to create category (CategoryModal)", err);
+                setErrorMsg("Tạo danh mục thất bại. Vui lòng thử lại.");
               } finally {
                 setSaving(false);
               }
@@ -115,6 +125,9 @@ export default function CategoryModal({
             Tạo
           </Button>
         </div>
+        {errorMsg && (
+          <p className="px-6 pb-4 text-xs text-destructive">{errorMsg}</p>
+        )}
       </div>
     </div>
   );

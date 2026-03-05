@@ -89,25 +89,27 @@ export default class CategoryController {
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ message: "Invalid category id" });
       }
-      const category = await Category.findByIdAndDelete(id);
-      if (!category)
-        return res.status(404).json({ message: "Category not found" });
-
-      // cascade delete foods in this category
+      const session = await mongoose.startSession();
       try {
-        const { deletedCount } = await Food.deleteMany({ category: id });
-        return res.json({
-          message: "Category deleted",
-          deletedFoods: deletedCount,
+        let deletedFoods = 0;
+        await session.withTransaction(async () => {
+          const category = await Category.findById(id).session(session);
+          if (!category) {
+            const notFound = new Error("CATEGORY_NOT_FOUND");
+            throw notFound;
+          }
+          const result = await Food.deleteMany({ category: id }, { session });
+          deletedFoods = result.deletedCount ?? 0;
+          await Category.deleteOne({ _id: id }, { session });
         });
+        return res.json({ message: "Category deleted", deletedFoods });
       } catch (err) {
-        console.error("Failed to delete foods for category:", err);
-        // still return success for category deletion but inform about the cascade failure
-        return res
-          .status(200)
-          .json({
-            message: "Category deleted, but failed to remove associated foods",
-          });
+        if (err instanceof Error && err.message === "CATEGORY_NOT_FOUND") {
+          return res.status(404).json({ message: "Category not found" });
+        }
+        throw err;
+      } finally {
+        await session.endSession();
       }
     } catch (error) {
       console.error("Delete category error:", error);

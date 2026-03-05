@@ -213,7 +213,10 @@ export default function FoodModal({
           </Button>
           <Button
             onClick={async () => {
-              if (!form.name.trim() || !form.price) return;
+              const parsedPrice = Number(form.price);
+              if (!form.name.trim()) return;
+              if (!form.category) return;
+              if (!Number.isFinite(parsedPrice) || parsedPrice < 0) return;
               setSaving(true);
               try {
                 const token = localStorage.getItem("token");
@@ -224,7 +227,7 @@ export default function FoodModal({
                 const payload = {
                   name: form.name,
                   description: form.description,
-                  price: Number(form.price),
+                  price: parsedPrice,
                   imageUrl: form.imageUrl,
                   category: form.category,
                   isAvailable: form.isAvailable,

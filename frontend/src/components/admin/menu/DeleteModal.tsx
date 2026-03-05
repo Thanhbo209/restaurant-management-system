@@ -9,7 +9,15 @@ type Props = {
 const DeleteModal = ({ deleteId, setDeleteId, onDeleted }: Props) => {
   return (
     <div>
-      <div className="fixed inset-0  backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div
+        className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-food-title"
+        onKeyDown={(e) => {
+          if (e.key === "Escape") setDeleteId(null);
+        }}
+      >
         <div className="bg-card border border-border rounded-2xl w-full max-w-sm p-7 shadow-2xl text-center">
           <div className="w-14 h-14 rounded-2xl bg-destructive/15 flex items-center justify-center mx-auto mb-4">
             <svg
@@ -26,7 +34,9 @@ const DeleteModal = ({ deleteId, setDeleteId, onDeleted }: Props) => {
               />
             </svg>
           </div>
-          <h3 className="text-base font-bold  mb-1">Xóa món ăn này?</h3>
+          <h3 id="delete-food-title" className="text-base font-bold mb-1">
+            Xóa món ăn này?
+          </h3>
           <p className="text-sm text-muted-foreground mb-6">
             Hành động này không thể hoàn tác.
           </p>
