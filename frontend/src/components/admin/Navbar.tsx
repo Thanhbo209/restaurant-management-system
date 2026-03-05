@@ -1,4 +1,4 @@
-import { Breadcrumb } from "@/pages/admin/AdminLayout";
+import AppBreadcrumb from "@/components/app-breadcrumb";
 import { Bell, Menu, Search, X } from "lucide-react";
 
 interface NavbarProps {
@@ -12,13 +12,15 @@ const Navbar = ({ setMobileOpen, mobileOpen }: NavbarProps) => {
       {/* Topbar */}
       <header className="shrink-0 bg-sidebar flex items-center rounded-t-3xl gap-4 px-6 py-4  backdrop-blur border-b border-border">
         <button
+          type="button"
+          aria-label={mobileOpen ? "Close sidebar" : "Open sidebar"}
           onClick={() => setMobileOpen(!mobileOpen)}
           className="lg:hidden p-2 rounded-lg  hover:bg-primary transition-colors"
         >
           {mobileOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
 
-        <Breadcrumb />
+        <AppBreadcrumb />
 
         <div className="flex-1" />
 
@@ -33,7 +35,11 @@ const Navbar = ({ setMobileOpen, mobileOpen }: NavbarProps) => {
         </div>
 
         {/* Bell */}
-        <button className="relative p-2 rounded-xl  hover:bg-secondary  transition-colors">
+        <button
+          type="button"
+          aria-label="Open notifications"
+          className="relative p-2 rounded-xl  hover:bg-secondary  transition-colors"
+        >
           <Bell size={20} />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full ring-2 ring-ring" />
         </button>

@@ -13,8 +13,7 @@ function App() {
 
         <Route path="/admin" element={<ProtectedAdminRoute />}>
           <Route element={<AdminLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="dashboard" index element={<Dashboard />} />
           </Route>
         </Route>
       </Routes>

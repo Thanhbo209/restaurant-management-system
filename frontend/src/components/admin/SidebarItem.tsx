@@ -20,7 +20,8 @@ export const SidebarItem = ({
   const isActive =
     item.path === "/admin"
       ? location.pathname === "/admin"
-      : location.pathname.startsWith(item.path);
+      : location.pathname === item.path ||
+        location.pathname.startsWith(`${item.path}/`);
 
   return (
     <NavLink

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -16,42 +16,13 @@ import Navbar from "@/components/admin/Navbar";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
+  { label: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Users", path: "/admin/users", icon: Users, badge: 3 },
   { label: "Products", path: "/admin/products", icon: Package },
   { label: "Orders", path: "/admin/orders", icon: ShoppingCart, badge: 12 },
   { label: "Analytics", path: "/admin/analytics", icon: BarChart3 },
   { label: "Settings", path: "/admin/settings", icon: Settings },
 ];
-
-// ─── Breadcrumb ───────────────────────────────────────────────────────────────
-export const Breadcrumb = () => {
-  const location = useLocation();
-  const segments = location.pathname
-    .replace("/admin", "")
-    .split("/")
-    .filter(Boolean);
-
-  return (
-    <nav className="flex items-center gap-1.5 text-sm text-slate-400">
-      <span className="text-slate-300 font-medium">Admin</span>
-      {segments.map((seg, i) => (
-        <span key={i} className="flex items-center gap-1.5">
-          <ChevronRight size={14} />
-          <span
-            className={
-              i === segments.length - 1
-                ? "text-white font-semibold capitalize"
-                : "capitalize"
-            }
-          >
-            {seg}
-          </span>
-        </span>
-      ))}
-    </nav>
-  );
-};
 
 // ─── Admin Layout ─────────────────────────────────────────────────────────────
 const AdminLayout = () => {
@@ -138,7 +109,7 @@ const AdminLayout = () => {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Navbar setMobileOpen={setMobileOpen} mobileOpen={mobileOpen} />
         {/* ── Outlet — child routes render here ── */}
-        <main className="flex-1 overflow-y-auto b p-6">
+        <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>
       </div>
