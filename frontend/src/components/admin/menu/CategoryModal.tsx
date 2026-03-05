@@ -1,17 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Category } from "@/types/category";
+import CategoryForm from "./CategoryForm";
 
 type Props = {
   modalOpen: boolean;
   onClose: () => void;
   onCreated?: (cat: Category) => void;
+  editItem?: Category | null;
+  onSaved?: (cat: Category) => void;
 };
 
 export default function CategoryModal({
   modalOpen,
   onClose,
   onCreated,
+  editItem = null,
+  onSaved,
 }: Props) {
   const [name, setName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -20,7 +25,22 @@ export default function CategoryModal({
   const API_BASE_URL = import.meta.env.VITE_API_URL as string | undefined;
   const base = API_BASE_URL ? API_BASE_URL.replace(/\/$/, "") : "";
 
+  useEffect(() => {
+    if (!modalOpen) return;
+    setErrorMsg(null);
+    setSaving(false);
+    if (editItem) {
+      setName(editItem.name ?? "");
+      setImageUrl(editItem.imageUrl ?? "");
+    } else {
+      setName("");
+      setImageUrl("");
+    }
+  }, [editItem, modalOpen]);
+
   if (!modalOpen) return null;
+
+  const isEdit = Boolean(editItem);
 
   return (
     <div
@@ -32,7 +52,7 @@ export default function CategoryModal({
       <div className="bg-card border border-border rounded-2xl w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <h2 id="category-modal-title" className="text-base font-bold">
-            Thêm danh mục
+            {isEdit ? "Chỉnh sửa danh mục" : "Thêm danh mục"}
           </h2>
           <button
             onClick={onClose}
@@ -55,26 +75,12 @@ export default function CategoryModal({
           </button>
         </div>
 
-        <div className="px-6 py-5 space-y-4">
-          <label className="block text-xs text-muted-foreground font-medium mb-1.5">
-            Tên danh mục
-          </label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full bg-input border border-border rounded-xl px-4 py-2.5 text-sm"
-            placeholder="VD: Món Khai Vị"
-          />
-          <label className="block text-xs text-muted-foreground font-medium mb-1.5">
-            URL ảnh (tùy chọn)
-          </label>
-          <input
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            className="w-full bg-input border border-border rounded-xl px-4 py-2.5 text-sm"
-            placeholder="https://..."
-          />
-        </div>
+        <CategoryForm
+          name={name}
+          setName={setName}
+          imageUrl={imageUrl}
+          setImageUrl={setImageUrl}
+        />
 
         <div className="px-6 py-4 border-t border-border flex justify-end gap-3">
           <Button onClick={onClose} variant={"outline"}>
@@ -91,38 +97,65 @@ export default function CategoryModal({
                   "Content-Type": "application/json",
                 };
                 if (token) headers["Authorization"] = `Bearer ${token}`;
-                const url = base ? `${base}/api/categories` : "/api/categories";
-                const res = await fetch(url, {
-                  method: "POST",
-                  headers,
-                  body: JSON.stringify({
-                    name: name.trim(),
-                    imageUrl: imageUrl.trim(),
-                  }),
-                });
-                if (!res.ok) {
-                  const text = await res.text().catch(() => "<no body>");
-                  throw new Error(
-                    `Failed to create category: ${res.status} ${url} ${text}`,
-                  );
+
+                if (isEdit && editItem) {
+                  const url = base
+                    ? `${base}/api/categories/${editItem._id}`
+                    : `/api/categories/${editItem._id}`;
+                  const res = await fetch(url, {
+                    method: "PUT",
+                    headers,
+                    body: JSON.stringify({
+                      name: name.trim(),
+                      imageUrl: imageUrl.trim(),
+                    }),
+                  });
+                  if (!res.ok) {
+                    const text = await res.text().catch(() => "<no body>");
+                    throw new Error(
+                      `Failed to update category: ${res.status} ${url} ${text}`,
+                    );
+                  }
+                  const json = await res.json();
+                  const updated = json?.data ?? json;
+                  if (typeof onSaved === "function")
+                    onSaved(updated as Category);
+                } else {
+                  const url = base
+                    ? `${base}/api/categories`
+                    : "/api/categories";
+                  const res = await fetch(url, {
+                    method: "POST",
+                    headers,
+                    body: JSON.stringify({
+                      name: name.trim(),
+                      imageUrl: imageUrl.trim(),
+                    }),
+                  });
+                  if (!res.ok) {
+                    const text = await res.text().catch(() => "<no body>");
+                    throw new Error(
+                      `Failed to create category: ${res.status} ${url} ${text}`,
+                    );
+                  }
+                  const json = await res.json();
+                  const created = json?.data ?? json;
+                  if (typeof onCreated === "function")
+                    onCreated(created as Category);
                 }
-                const json = await res.json();
-                const created = json?.data ?? json;
-                if (typeof onCreated === "function")
-                  onCreated(created as Category);
                 setName("");
                 setImageUrl("");
                 onClose();
               } catch (err) {
-                console.error("Failed to create category (CategoryModal)", err);
-                setErrorMsg("Tạo danh mục thất bại. Vui lòng thử lại.");
+                console.error("Failed to save category (CategoryModal)", err);
+                setErrorMsg("Lưu danh mục thất bại. Vui lòng thử lại.");
               } finally {
                 setSaving(false);
               }
             }}
             disabled={saving}
           >
-            Tạo
+            {isEdit ? "Lưu" : "Tạo"}
           </Button>
         </div>
         {errorMsg && (

@@ -1,26 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Field, FieldLabel, FieldContent } from "@/components/ui/field";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import type { Food, FoodForm } from "@/types/food";
 
-function Toggle({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onChange}
-      className={`relative w-10 h-5 rounded-full transition-colors duration-200 focus:outline-none ${checked ? "bg-primary" : "bg-accent"}`}
-    >
-      <span
-        className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200 ${checked ? "left-5" : "left-0.5"}`}
-      />
-    </button>
-  );
-}
+// small switch replaced by Checkbox usage below
 
 type CategoryShape = { _id: string; name: string };
 
@@ -115,88 +108,113 @@ export default function FoodModal({
         <div className="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="block text-xs text-muted-foreground font-medium mb-1.5">
-                Tên món ăn <span className="text-destructive">*</span>
-              </label>
-              <input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="VD: Phở Bò Đặc Biệt"
-                className="w-full bg-input border border-border focus:border-ring rounded-xl px-4 py-2.5 text-sm  placeholder-secondary outline-none transition-colors"
-              />
+              <Field>
+                <FieldLabel>
+                  Tên món ăn <span className="text-destructive">*</span>
+                </FieldLabel>
+                <FieldContent>
+                  <Input
+                    placeholder="VD: Phở Bò Đặc Biệt"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  />
+                </FieldContent>
+              </Field>
             </div>
+
             <div>
-              <label className="block text-xs text-muted-foreground font-medium mb-1.5">
-                Giá (VNĐ) <span className="text-destructive">*</span>
-              </label>
-              <input
-                type="number"
-                value={form.price}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
-                placeholder="95000"
-                className="w-full bg-input border border-border focus:border-ring rounded-xl px-4 py-2.5 text-sm  placeholder-secondary outline-none transition-colors"
-              />
+              <Field>
+                <FieldLabel>
+                  Giá (VNĐ) <span className="text-destructive">*</span>
+                </FieldLabel>
+                <FieldContent>
+                  <Input
+                    type="number"
+                    placeholder="95000"
+                    value={form.price}
+                    onChange={(e) =>
+                      setForm({ ...form, price: e.target.value })
+                    }
+                  />
+                </FieldContent>
+              </Field>
             </div>
+
             <div>
-              <label className="block text-xs text-muted-foreground font-medium mb-1.5">
-                Danh mục
-              </label>
-              <select
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="w-full bg-input border border-border focus:border-ring rounded-xl px-4 py-2.5 text-sm  outline-none transition-colors"
-              >
-                {localCats.length === 0 ? (
-                  <option value="">-- Chưa có danh mục --</option>
-                ) : (
-                  localCats.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {c.name}
-                    </option>
-                  ))
-                )}
-              </select>
+              <Field>
+                <FieldLabel>Danh mục</FieldLabel>
+                <FieldContent>
+                  <Select
+                    value={form.category}
+                    onValueChange={(v) => setForm({ ...form, category: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          localCats.length === 0
+                            ? "-- Chưa có danh mục --"
+                            : "Chọn danh mục"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {localCats.map((c) => (
+                        <SelectItem key={c._id} value={c._id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FieldContent>
+              </Field>
             </div>
+
             <div className="col-span-2">
-              <label className="block text-xs text-muted-foreground font-medium mb-1.5">
-                Mô tả
-              </label>
-              <textarea
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
-                placeholder="Mô tả ngắn về món ăn..."
-                rows={2}
-                className="w-full bg-input border border-border focus:border-ring rounded-xl px-4 py-2.5 text-sm  placeholder-secondary outline-none transition-colors resize-none"
-              />
+              <Field>
+                <FieldLabel>Mô tả</FieldLabel>
+                <FieldContent>
+                  <Textarea
+                    value={form.description}
+                    onChange={(e) =>
+                      setForm({ ...form, description: e.target.value })
+                    }
+                    placeholder="Mô tả ngắn về món ăn..."
+                    rows={2}
+                  />
+                </FieldContent>
+              </Field>
             </div>
+
             <div className="col-span-2">
-              <label className="block text-xs text-muted-foreground font-medium mb-1.5">
-                URL ảnh
-              </label>
-              <input
-                value={form.imageUrl}
-                onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                placeholder="https://..."
-                className="w-full bg-input border border-border focus:border-ring rounded-xl px-4 py-2.5 text-sm  placeholder-secondary outline-none transition-colors"
-              />
+              <Field>
+                <FieldLabel>URL ảnh</FieldLabel>
+                <FieldContent>
+                  <Input
+                    placeholder="https://..."
+                    value={form.imageUrl}
+                    onChange={(e) =>
+                      setForm({ ...form, imageUrl: e.target.value })
+                    }
+                  />
+                </FieldContent>
+              </Field>
             </div>
+
             <div className="col-span-2 flex gap-6 pt-1">
               <label className="flex items-center gap-2.5 cursor-pointer">
-                <Toggle
+                <Checkbox
                   checked={!!form.isAvailable}
-                  onChange={() =>
-                    setForm({ ...form, isAvailable: !form.isAvailable })
+                  onCheckedChange={(v) =>
+                    setForm({ ...form, isAvailable: Boolean(v) })
                   }
                 />
                 <span className="text-sm text-muted-foreground">Đang bán</span>
               </label>
               <label className="flex items-center gap-2.5 cursor-pointer">
-                <Toggle
+                <Checkbox
                   checked={!!form.isFeatured}
-                  onChange={() =>
-                    setForm({ ...form, isFeatured: !form.isFeatured })
+                  onCheckedChange={(v) =>
+                    setForm({ ...form, isFeatured: Boolean(v) })
                   }
                 />
                 <span className="text-sm text-muted-foreground">

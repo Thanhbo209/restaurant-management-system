@@ -1,3 +1,4 @@
+import type { TableStatus } from "@/types/table";
 import type { ElementType } from "react";
 
 export type LocalStat = {
@@ -10,3 +11,7 @@ export type LocalStat = {
   color?: string;
   bg?: string;
 };
+
+export type TableStats = {
+  total: number;
+} & Record<TableStatus, number>;

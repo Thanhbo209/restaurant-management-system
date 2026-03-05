@@ -1,20 +1,15 @@
-import type { ElementType } from "react";
-import { Box, CheckCircle, Star, BarChart2 } from "lucide-react";
-export type { StatItem };
+import {
+  Box,
+  CheckCircle,
+  Star,
+  BarChart2,
+  UserRoundX,
+  BookOpenCheck,
+} from "lucide-react";
 import type { LocalStat } from "@/types/stats";
 import { ShieldCheck, UserCheck, Users, UserX } from "lucide-react";
 import type { User } from "@/types/user";
-
-type StatItem = {
-  title: string;
-  value: string;
-  change: string;
-  trend: "up" | "down";
-  description?: string;
-  icon: ElementType;
-  color?: string;
-  bg?: string;
-};
+import type { Table } from "@/types/table";
 
 export function getMenuStats({
   totalItems,
@@ -26,7 +21,7 @@ export function getMenuStats({
   availableItems: number;
   featuredItems: number;
   avgRating: string;
-}): StatItem[] {
+}): LocalStat[] {
   return [
     {
       title: "Tổng món ăn",
@@ -67,6 +62,56 @@ export function getMenuStats({
       icon: BarChart2,
       color: "text-violet-400",
       bg: "bg-violet-500/10",
+    },
+  ];
+}
+
+export function TABLE_STATS(tables: Table[]): LocalStat[] {
+  const total = tables.length;
+  const available = tables.filter((t) => t.status === "available").length;
+  const occupied = tables.filter((t) => t.status === "occupied").length;
+  const reserved = tables.filter((t) => t.status === "reserved").length;
+
+  return [
+    {
+      title: "Tổng bàn",
+      value: String(total),
+      change: "",
+      trend: "up",
+      description: "",
+      icon: Box,
+      color: "text-violet-400",
+      bg: "bg-violet-500/10",
+    },
+    {
+      title: "Trống",
+      value: String(available),
+      change: "",
+      trend: "up",
+      description: "",
+      icon: CheckCircle,
+      color: "text-emerald-400",
+      bg: "bg-emerald-500/10",
+    },
+    {
+      title: "Đang phục vụ",
+      value: String(occupied),
+      change: "",
+      trend: "up",
+      description: "",
+      icon: UserRoundX,
+      color: "text-rose-400",
+      bg: "bg-rose-500/10",
+    },
+    {
+      title: "Đã đặt",
+      value: String(reserved),
+      change: "",
+      trend: "up",
+      description: "",
+      icon: BookOpenCheck,
+      color: "text-amber-400",
+      bg: "bg-amber-500/10",
     },
   ];
 }

@@ -53,12 +53,20 @@ export default function MenuManagement() {
     ? (foods.reduce((s, f) => s + f.ratingAverage, 0) / foods.length).toFixed(1)
     : "0.0";
 
+  const STATS = getMenuStats({
+    totalItems,
+    availableItems,
+    featuredItems,
+    avgRating,
+  });
+
   const openAdd = () => {
     setForm({ ...emptyForm, category: categories[0]?._id ?? "" });
     setEditItem(null);
     setModalOpen(true);
   };
   const [catModalOpen, setCatModalOpen] = useState(false);
+  const [editCategory, setEditCategory] = useState<CategoryType | null>(null);
   const openEdit = (item: Food) => {
     setForm({
       name: item.name,
@@ -132,13 +140,6 @@ export default function MenuManagement() {
     fetchData();
   }, []);
 
-  const STATS = getMenuStats({
-    totalItems,
-    availableItems,
-    featuredItems,
-    avgRating,
-  });
-
   return (
     <div className="min-h-screen  ">
       {/* ── Two-column layout ── */}
@@ -161,6 +162,18 @@ export default function MenuManagement() {
                 selectedCategory={selectedCategory}
                 setSelectedCategory={setSelectedCategory}
                 CATEGORIES={categories}
+                onEditRequested={(c) => {
+                  setEditCategory(c);
+                  setCatModalOpen(true);
+                }}
+                onCategoryRemoved={(id) => {
+                  // remove category from list
+                  setCategories((prev) => prev.filter((p) => p._id !== id));
+                  // remove foods belonging to that category
+                  setFoods((prev) => prev.filter((f) => f.category !== id));
+                  // if the deleted category was selected, reset to all
+                  if (selectedCategory === id) setSelectedCategory("all");
+                }}
               />
             )}
           </div>
@@ -207,7 +220,10 @@ export default function MenuManagement() {
                   </Button>
                 )}
                 <Button
-                  onClick={() => setCatModalOpen(true)}
+                  onClick={() => {
+                    setEditCategory(null);
+                    setCatModalOpen(true);
+                  }}
                   variant={"outline"}
                 >
                   Thêm danh mục
@@ -284,6 +300,7 @@ export default function MenuManagement() {
                   .sort((a, b) => (b.ratingCount || 0) - (a.ratingCount || 0))
                   .slice(0, 3)
                   .map((it) => ({
+                    id: it._id,
                     name: it.name,
                     sold: it.ratingCount ?? 0,
                     revenue: "—",
@@ -346,21 +363,27 @@ export default function MenuManagement() {
         editItem={editItem}
         onSaved={(item) => {
           if (!item) return;
-          if (editItem) {
+          if (editItem)
             setFoods((prev) =>
               prev.map((f) => (f._id === item._id ? item : f)),
             );
-          } else {
-            setFoods((prev) => [...prev, item]);
-          }
+          else setFoods((prev) => [...prev, item]);
         }}
         CATEGORIES={categories}
       />
 
       <CategoryModal
         modalOpen={catModalOpen}
-        onClose={() => setCatModalOpen(false)}
+        onClose={() => {
+          setCatModalOpen(false);
+          setEditCategory(null);
+        }}
         onCreated={(c) => setCategories((prev) => [...prev, c])}
+        editItem={editCategory}
+        onSaved={(c) => {
+          setCategories((prev) => prev.map((p) => (p._id === c._id ? c : p)));
+          setEditCategory(null);
+        }}
       />
 
       {/* ══════ Delete Confirm Modal ══════ */}
