@@ -19,6 +19,8 @@ export const protect = async (req, res, next) => {
     const token = authHeader.slice(7).trim();
     if (!token) return res.status(401).json({ message: "Unauthorized" });
 
+    // verify token and extract payload
+    const decoded = verifyToken(token);
     const user = await User.findById(decoded.id).select("-password");
     if (!user || !user.isActive) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -27,6 +29,7 @@ export const protect = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
+    console.error("Auth protect error:", error);
     return res.status(401).json({ message: "Unauthorized" });
   }
 };

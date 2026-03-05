@@ -9,13 +9,17 @@ export interface NavItem {
 }
 
 // ─── Sidebar Nav Item ─────────────────────────────────────────────────────────
-export const SidebarItem = ({
-  item,
-  collapsed,
-}: {
+export const SidebarItem = (props: {
   item: NavItem;
   collapsed: boolean;
+  user?: {
+    name?: string;
+    email?: string;
+    avatarUrl?: string;
+    role?: string;
+  } | null;
 }) => {
+  const { item, collapsed } = props;
   const location = useLocation();
   const isActive =
     item.path === "/admin"
