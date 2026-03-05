@@ -92,7 +92,7 @@ const LoginForm = () => {
               />
             </div>
             {errors.email && (
-              <p className="text-red-500 text-xs">{errors.email.message}</p>
+              <p className="text-destructive text-xs">{errors.email.message}</p>
             )}
           </div>
 
@@ -119,7 +119,9 @@ const LoginForm = () => {
             </div>
 
             {errors.password && (
-              <p className="text-red-500 text-xs">{errors.password.message}</p>
+              <p className="text-destructive text-xs">
+                {errors.password.message}
+              </p>
             )}
           </div>
 
