@@ -1,15 +1,11 @@
 import AppBreadcrumb from "@/components/app-breadcrumb";
+import type { User } from "@/types/user";
 import { Bell, Menu, Search, X } from "lucide-react";
 
 interface NavbarProps {
   setMobileOpen: (mobileOpen: boolean) => void;
   mobileOpen: boolean;
-  user?: {
-    name?: string;
-    email?: string;
-    avatarUrl?: string;
-    role?: string;
-  } | null;
+  user?: User | null;
 }
 
 const Navbar = ({ setMobileOpen, mobileOpen, user }: NavbarProps) => {

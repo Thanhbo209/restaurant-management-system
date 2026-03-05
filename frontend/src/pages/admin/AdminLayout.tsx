@@ -11,18 +11,82 @@ const AdminLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   // user will be an object like { name, email, role, avatarUrl }
-  const [user, setUser] = useState<User | null>(null);
-
-  // Load current user from localStorage on mount
-  useEffect(() => {
-    const userStr = localStorage.getItem("user");
-    if (!userStr) return;
+  // Initialize from localStorage synchronously to avoid initial UI flicker.
+  const [user, setUser] = useState<User | null>(() => {
+    const seedUserStr = localStorage.getItem("user");
+    if (!seedUserStr) return null;
     try {
-      const parsed = JSON.parse(userStr);
-      setUser(parsed);
-    } catch (err) {
-      // ignore invalid JSON
+      return JSON.parse(seedUserStr) as User;
+    } catch (e) {
+      // invalid JSON — clear it and start with null
+      console.error(
+        "Invalid user in localStorage during init, clearing it.",
+        e,
+      );
+      localStorage.removeItem("user");
+      return null;
     }
+  });
+
+  // Fetch authoritative user from the server (/api/auth/me) and update state/localStorage.
+  useEffect(() => {
+    const API_BASE_URL = import.meta.env.VITE_API_URL as string | undefined;
+
+    // If there's no token, there's no need to call /me.
+    const token = localStorage.getItem("token");
+    if (!token) {
+      // no token — nothing to fetch; keep the seeded state (or null)
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchMe = async () => {
+      try {
+        const base = API_BASE_URL ? API_BASE_URL.replace(/\/$/, "") : "";
+        const url = base ? `${base}/api/auth/me` : "/api/auth/me";
+
+        const res = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controller.signal,
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+          try {
+            localStorage.setItem("user", JSON.stringify(data));
+          } catch (e) {
+            console.warn("Could not save user to localStorage", e);
+          }
+        } else if (res.status === 401) {
+          // Not authorized — clear local auth and UI state.
+          console.warn(
+            "Unauthorized when fetching /api/auth/me, clearing local auth data.",
+          );
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setUser(null);
+        } else {
+          const text = await res.text();
+          console.error("Failed to fetch /api/auth/me:", res.status, text);
+          setUser(null);
+        }
+      } catch (err) {
+        const e = err as Error & { name?: string };
+        if (e.name === "AbortError") return;
+        console.error("Error fetching current user:", err);
+        setUser(null);
+      }
+    };
+
+    fetchMe();
+
+    return () => controller.abort();
   }, []);
 
   return (

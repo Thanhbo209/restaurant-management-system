@@ -1,3 +1,4 @@
+import type { User } from "@/types/user";
 import { NavLink, useLocation } from "react-router";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -12,12 +13,7 @@ export interface NavItem {
 export const SidebarItem = (props: {
   item: NavItem;
   collapsed: boolean;
-  user?: {
-    name?: string;
-    email?: string;
-    avatarUrl?: string;
-    role?: string;
-  } | null;
+  user?: User | null;
 }) => {
   const { item, collapsed } = props;
   const location = useLocation();
