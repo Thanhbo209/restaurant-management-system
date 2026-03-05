@@ -1,12 +1,14 @@
 import AppBreadcrumb from "@/components/app-breadcrumb";
+import type { User } from "@/types/user";
 import { Bell, Menu, Search, X } from "lucide-react";
 
 interface NavbarProps {
   setMobileOpen: (mobileOpen: boolean) => void;
   mobileOpen: boolean;
+  user?: User | null;
 }
 
-const Navbar = ({ setMobileOpen, mobileOpen }: NavbarProps) => {
+const Navbar = ({ setMobileOpen, mobileOpen, user }: NavbarProps) => {
   return (
     <div>
       {/* Topbar */}
@@ -46,8 +48,8 @@ const Navbar = ({ setMobileOpen, mobileOpen }: NavbarProps) => {
 
         {/* Avatar */}
         <img
-          src="https://i.pravatar.cc/32?img=11"
-          alt="avatar"
+          src={user?.avatarUrl || "https://i.pravatar.cc/32?img=11"}
+          alt={user?.name || "avatar"}
           className="w-8 h-8 rounded-full ring-2 ring-ring cursor-pointer"
         />
       </header>
