@@ -10,10 +10,15 @@ interface Props {
 export default function TableVisual({ capacity, status, STATUS }: Props) {
   const cfg = STATUS[status];
 
-  const chairCount = Math.min(Math.floor(capacity / 2), 3);
+  const safeCapacity = Math.max(0, Math.floor(capacity));
+  const chairCount = Math.min(Math.floor(safeCapacity / 2), 3);
 
   const tableSize =
-    capacity >= 6 ? "w-20 h-12" : capacity >= 4 ? "w-16 h-10" : "w-12 h-8";
+    safeCapacity >= 6
+      ? "w-20 h-12"
+      : safeCapacity >= 4
+        ? "w-16 h-10"
+        : "w-12 h-8";
 
   return (
     <div className="flex flex-col items-center gap-1.5 py-2">

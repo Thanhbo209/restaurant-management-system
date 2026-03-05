@@ -155,6 +155,8 @@ export default function TableModal({
                       updates.capacity = Number(form.capacity);
                     if (typeof form.status !== "undefined")
                       updates.status = form.status;
+                    if (typeof form.qrCodeUrl !== "undefined")
+                      updates.qrCodeUrl = form.qrCodeUrl;
                     const res = await axios.put(
                       `${API_BASE}/api/tables/${id}`,
                       updates,
@@ -165,6 +167,7 @@ export default function TableModal({
                     const body = {
                       tableNumber: Number(form.tableNumber),
                       capacity: Number(form.capacity ?? 4),
+                      qrCodeUrl: form.qrCodeUrl?.trim() || undefined,
                     };
                     const res = await axios.post(
                       `${API_BASE}/api/tables`,

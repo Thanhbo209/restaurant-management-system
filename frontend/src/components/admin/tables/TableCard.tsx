@@ -47,15 +47,29 @@ export default function TableCard({
       </div>
 
       <div className="flex gap-1.5 w-full justify-center pt-1 border-t">
-        <Button variant="outline" onClick={() => onCycle(table._id)}>
+        <Button
+          variant="outline"
+          aria-label="Chuyển trạng thái bàn"
+          title="Chuyển trạng thái bàn"
+          onClick={() => onCycle(table._id)}
+        >
           <RefreshCw size={14} />
         </Button>
 
-        <Button onClick={() => onEdit(table)}>
+        <Button
+          aria-label="Chỉnh sửa bàn"
+          title="Chỉnh sửa bàn"
+          onClick={() => onEdit(table)}
+        >
           <Pencil size={14} />
         </Button>
 
-        <Button variant="destructive" onClick={() => onDelete(table)}>
+        <Button
+          variant="destructive"
+          aria-label="Xóa bàn"
+          title="Xóa bàn"
+          onClick={() => onDelete(table)}
+        >
           <Trash2 size={14} />
         </Button>
       </div>

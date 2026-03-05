@@ -57,7 +57,9 @@ export default function MenuPage() {
   const foodsByCategory = useMemo(() => {
     const map: Record<string, Food[]> = {};
     // ensure categories order preserved
-    categories.forEach((c) => (map[c._id] = []));
+    categories.forEach((c) => {
+      map[c._id] = [];
+    });
     for (const f of foods) {
       const catId =
         typeof f.category === "string" ? f.category : f.category?._id;

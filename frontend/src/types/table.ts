@@ -29,7 +29,7 @@ export const STATUS: Record<TableStatus, StatusConfig> = {
   },
 
   occupied: {
-    label: "Đã đặt",
+    label: "Đang phục vụ",
     badge: "bg-chart-2/20 text-chart-2 border border-chart-2",
     dot: "bg-rose-500",
     card: "border-rose-200 hover:border-rose-400",
@@ -39,7 +39,7 @@ export const STATUS: Record<TableStatus, StatusConfig> = {
   },
 
   reserved: {
-    label: "Đang phục vụ",
+    label: "Đã đặt",
     badge: "bg-chart-4/20 text-chart-4 border border-chart-4",
     dot: "bg-amber-500",
     card: "border-amber-200 hover:border-amber-400",

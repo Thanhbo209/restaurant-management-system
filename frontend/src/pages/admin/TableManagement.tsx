@@ -23,6 +23,12 @@ export default function TableManagement() {
   const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
   const stats = TABLE_STATS(tables);
+  const tableCounts = {
+    all: tables.length,
+    available: tables.filter((t) => t.status === "available").length,
+    occupied: tables.filter((t) => t.status === "occupied").length,
+    reserved: tables.filter((t) => t.status === "reserved").length,
+  };
 
   const filtered =
     filter === "all" ? tables : tables.filter((t) => t.status === filter);
@@ -161,9 +167,8 @@ export default function TableManagement() {
 
   return (
     <div className="min-h-screen font-sans">
-      <TableHeader onAdd={() => setModal("add")} />
-
-      <main className="max-w-6xl mx-auto px-6 py-6">
+      <main className=" mx-auto px-6 py-6">
+        <TableHeader onAdd={() => setModal("add")} />
         {/* Stats */}
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -197,8 +202,8 @@ export default function TableManagement() {
               }`}
             >
               {s === "all"
-                ? `Tất cả (${stats.total})`
-                : `${STATUS[s].label} (${stats[s]})`}
+                ? `Tất cả (${tableCounts.all})`
+                : `${STATUS[s as keyof typeof STATUS].label} (${tableCounts[s as keyof typeof tableCounts]})`}
             </button>
           ))}
         </div>

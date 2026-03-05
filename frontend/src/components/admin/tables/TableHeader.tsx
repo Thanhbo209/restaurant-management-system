@@ -7,10 +7,10 @@ interface Props {
 
 export default function TableHeader({ onAdd }: Props) {
   return (
-    <div className="flex justify-between">
+    <div className="flex justify-between pb-5">
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-          <Utensils className="w-5 h-5 text-white" />
+          <Utensils className="w-5 h-5 " />
         </div>
 
         <div>

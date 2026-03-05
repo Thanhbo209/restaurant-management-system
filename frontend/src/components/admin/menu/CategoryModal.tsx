@@ -26,6 +26,9 @@ export default function CategoryModal({
   const base = API_BASE_URL ? API_BASE_URL.replace(/\/$/, "") : "";
 
   useEffect(() => {
+    if (!modalOpen) return;
+    setErrorMsg(null);
+    setSaving(false);
     if (editItem) {
       setName(editItem.name ?? "");
       setImageUrl(editItem.imageUrl ?? "");
@@ -33,7 +36,7 @@ export default function CategoryModal({
       setName("");
       setImageUrl("");
     }
-  }, [editItem]);
+  }, [editItem, modalOpen]);
 
   if (!modalOpen) return null;
 

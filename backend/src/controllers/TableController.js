@@ -104,7 +104,9 @@ export default class TableController {
             updates.qrCodeUrl = qrCodeUrl;
           } catch (err) {
             console.error("Failed to generate QR code:", err);
-            // continue without failing the whole update
+            return res
+              .status(500)
+              .json({ message: "Failed to regenerate QR code" });
           }
         }
       }

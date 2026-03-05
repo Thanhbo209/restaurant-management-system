@@ -300,6 +300,7 @@ export default function MenuManagement() {
                   .sort((a, b) => (b.ratingCount || 0) - (a.ratingCount || 0))
                   .slice(0, 3)
                   .map((it) => ({
+                    id: it._id,
                     name: it.name,
                     sold: it.ratingCount ?? 0,
                     revenue: "—",
