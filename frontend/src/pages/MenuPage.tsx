@@ -1,137 +1,141 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "react-router";
 import axios from "axios";
 
-type Category = {
-  _id: string;
-  name: string;
-  description?: string;
-};
+import type { Food } from "@/types/food";
+import type { Category } from "@/types/category";
 
-type Food = {
-  _id: string;
-  name: string;
-  price: number;
-  imageUrl?: string;
-  category: Category | string | null;
-  description?: string;
-  rating?: number;
-  isAvailable?: boolean;
-};
+import MenuHeader from "@/components/menu/MenuHeader";
+import CategoryNav from "@/components/menu/CategoryNav";
+import CategoryHeading from "@/components/menu/CategoryHeading";
+import FoodGrid from "@/components/menu/FoodGrid";
+import FloatingCartBar from "@/components/menu/FloatingCartBar";
+import CartDrawer from "@/components/menu/CartDrawer";
+
+type CartItem = Food & { qty: number };
 
 export default function MenuPage() {
   const { tableNumber } = useParams();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [foods, setFoods] = useState<Food[]>([]);
+  const [cart, setCart] = useState<Record<string, CartItem>>({});
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [cartOpen, setCartOpen] = useState(false);
+
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let mounted = true;
-
     const base = import.meta.env.VITE_API_URL ?? "";
-    const catReq = axios.get(`${base}/api/categories`);
-    const foodReq = axios.get(`${base}/api/foods`);
 
-    Promise.all([catReq, foodReq])
+    Promise.all([
+      axios.get<Category[]>(`${base}/api/categories`),
+      axios.get<Food[]>(`${base}/api/foods`),
+    ])
       .then(([cats, foodsRes]) => {
-        if (!mounted) return;
-        setCategories(cats.data || []);
-        setFoods(foodsRes.data || []);
+        const activeCats = cats.data
+          .filter((c) => c.isActive)
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+        setCategories(activeCats);
+        setFoods(foodsRes.data);
+
+        if (activeCats.length) setActiveCategory(activeCats[0]._id);
+        setLoading(false);
       })
       .catch((err) => {
-        console.error(err);
-        if (!mounted) return;
-        setError("Unable to load menu. Please try again later.");
-      })
-      .finally(() => {
-        if (!mounted) return;
+        console.error("Failed to load menu data:", err);
         setLoading(false);
+        // Consider adding error state to display user-friendly message
       });
-
-    return () => {
-      mounted = false;
-    };
   }, []);
 
   const foodsByCategory = useMemo(() => {
     const map: Record<string, Food[]> = {};
-    // ensure categories order preserved
+
     categories.forEach((c) => {
       map[c._id] = [];
     });
-    for (const f of foods) {
-      const catId =
+
+    foods.forEach((f) => {
+      const categoryId =
         typeof f.category === "string" ? f.category : f.category?._id;
-      if (catId && map[catId]) map[catId].push(f);
-      else {
-        // uncategorized bucket
-        if (!map.__uncat) map.__uncat = [];
-        map.__uncat.push(f);
+
+      if (categoryId && map[categoryId]) {
+        map[categoryId].push(f);
       }
-    }
+    });
+
     return map;
   }, [categories, foods]);
 
-  if (loading) return <div className="p-6">Loading menu…</div>;
-  if (error) return <div className="p-6 text-red-600">{error}</div>;
+  const addToCart = useCallback((food: Food) => {
+    setCart((prev) => ({
+      ...prev,
+      [food._id]: { ...food, qty: (prev[food._id]?.qty ?? 0) + 1 },
+    }));
+  }, []);
+
+  const removeFromCart = useCallback((id: string) => {
+    setCart((prev) => {
+      if (!prev[id] || prev[id].qty <= 1) {
+        const { [id]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [id]: { ...prev[id], qty: prev[id].qty - 1 } };
+    });
+  }, []);
+
+  const cartItems = Object.values(cart);
+  const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
+  const cartTotal = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
+
+  if (loading) return <div>Loading...</div>;
+
+  const activeFoods = activeCategory
+    ? (foodsByCategory[activeCategory] ?? [])
+    : [];
+
+  const activeCat = categories.find((c) => c._id === activeCategory);
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-2">Menu</h1>
-      <p className="text-sm text-muted-foreground mb-6">Table: {tableNumber}</p>
+    <div className="min-h-screen pb-28">
+      <MenuHeader
+        tableNumber={tableNumber}
+        cartCount={cartCount}
+        openCart={() => setCartOpen(true)}
+      />
 
-      {categories.map((cat) => (
-        <section key={cat._id} className="mb-6">
-          <h2 className="text-xl font-semibold mb-2">{cat.name}</h2>
-          <p className="text-sm text-muted-foreground mb-3">
-            {cat.description}
-          </p>
-          <ul className="space-y-2">
-            {(foodsByCategory[cat._id] || []).map((f) => (
-              <li
-                key={f._id}
-                className="flex items-center justify-between p-3 rounded-lg bg-card border border-border"
-              >
-                <div>
-                  <div className="font-medium">{f.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {f.description ?? ""}
-                  </div>
-                </div>
-                <div className="text-sm font-semibold">
-                  {Number(f.price).toLocaleString()}₫
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+      <CategoryNav
+        categories={categories}
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
+      />
 
-      {/* uncategorized */}
-      {foodsByCategory.__uncat && foodsByCategory.__uncat.length > 0 && (
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold mb-2">Other</h2>
-          <ul className="space-y-2">
-            {foodsByCategory.__uncat.map((f) => (
-              <li
-                key={f._id}
-                className="flex items-center justify-between p-3 rounded-lg bg-card border border-border"
-              >
-                <div>
-                  <div className="font-medium">{f.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {f.description ?? ""}
-                  </div>
-                </div>
-                <div className="text-sm font-semibold">
-                  {Number(f.price).toLocaleString()}₫
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <CategoryHeading category={activeCat} />
+
+      <FoodGrid
+        foods={activeFoods}
+        cart={cart}
+        addToCart={addToCart}
+        removeFromCart={removeFromCart}
+      />
+
+      <FloatingCartBar
+        cartCount={cartCount}
+        cartTotal={cartTotal}
+        openCart={() => setCartOpen(true)}
+      />
+
+      <CartDrawer
+        open={cartOpen}
+        setOpen={setCartOpen}
+        cartItems={cartItems}
+        cartTotal={cartTotal}
+        addToCart={addToCart}
+        removeFromCart={removeFromCart}
+        tableNumber={tableNumber}
+      />
     </div>
   );
 }
