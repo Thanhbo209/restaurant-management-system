@@ -16,7 +16,9 @@ export default function MenuHeader({
       <div className="max-w-3xl mx-auto px-5 py-3 flex justify-between items-center">
         <div>
           <p className="font-bold text-lg">Nhà Hàng</p>
-          <p className="text-xs text-muted-foreground">Bàn {tableNumber}</p>
+          {tableNumber && (
+            <p className="text-xs text-muted-foreground">Bàn {tableNumber}</p>
+          )}
         </div>
 
         <button

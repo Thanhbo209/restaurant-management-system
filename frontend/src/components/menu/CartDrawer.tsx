@@ -80,6 +80,7 @@ export default function CartDrawer({
                   {item.imageUrl && (
                     <img
                       src={item.imageUrl}
+                      alt={item.name}
                       className="w-12 h-12 rounded-lg object-cover"
                     />
                   )}

@@ -22,6 +22,7 @@ export default function CategoryHeading({ category }: Props) {
       {category.imageUrl && (
         <img
           src={category.imageUrl}
+          alt={category.name}
           className="w-8 h-8 rounded-full object-cover"
         />
       )}

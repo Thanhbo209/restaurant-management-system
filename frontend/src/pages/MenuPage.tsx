@@ -31,34 +31,31 @@ export default function MenuPage() {
     Promise.all([
       axios.get<Category[]>(`${base}/api/categories`),
       axios.get<Food[]>(`${base}/api/foods`),
-    ]).then(([cats, foodsRes]) => {
-      const activeCats = cats.data
-        .filter((c) => c.isActive)
-        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    ])
+      .then(([cats, foodsRes]) => {
+        const activeCats = cats.data
+          .filter((c) => c.isActive)
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
-      setCategories(activeCats);
-      setFoods(foodsRes.data);
+        setCategories(activeCats);
+        setFoods(foodsRes.data);
 
-      if (activeCats.length) setActiveCategory(activeCats[0]._id);
-      setLoading(false);
-    });
+        if (activeCats.length) setActiveCategory(activeCats[0]._id);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to load menu data:", err);
+        setLoading(false);
+        // Consider adding error state to display user-friendly message
+      });
   }, []);
-
-  // const foodsByCategory = useMemo(() => {
-  //   const map: Record<string, Food[]> = {};
-  //   categories.forEach((c) => (map[c._id] = []));
-
-  //   foods.forEach((f) => {
-  //     if (f.category && map[f.category]) map[f.category].push(f);
-  //   });
-
-  //   return map;
-  // }, [categories, foods]);
 
   const foodsByCategory = useMemo(() => {
     const map: Record<string, Food[]> = {};
 
-    categories.forEach((c) => (map[c._id] = []));
+    categories.forEach((c) => {
+      map[c._id] = [];
+    });
 
     foods.forEach((f) => {
       const categoryId =
