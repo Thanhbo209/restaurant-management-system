@@ -1,11 +1,10 @@
 import express from "express";
 import UserController from "../controllers/UserController.js";
-import { protect, restrictToAdmin } from "../middlewares/AuthMiddleware.js";
+import { protect, restrictTo } from "../middlewares/AuthMiddleware.js";
 
 const router = express.Router();
 
-// All routes here are admin-only
-router.use(protect, restrictToAdmin);
+router.use(protect, restrictTo("admin"));
 
 router.get("/", UserController.list);
 router.post("/", UserController.create);
