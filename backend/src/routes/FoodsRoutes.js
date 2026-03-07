@@ -1,6 +1,6 @@
 import express from "express";
 import FoodController from "../controllers/FoodController.js";
-import { protect, restrictToAdmin } from "../middlewares/AuthMiddleware.js";
+import { protect, restrictTo } from "../middlewares/AuthMiddleware.js";
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ router.get("/", FoodController.list);
 router.get("/:id", FoodController.get);
 
 // protect mutating routes
-router.use(protect, restrictToAdmin);
+router.use(protect, restrictTo("admin"));
 
 router.post("/", FoodController.create);
 router.put("/:id", FoodController.update);

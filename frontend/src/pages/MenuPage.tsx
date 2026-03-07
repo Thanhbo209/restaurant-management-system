@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import axios from "axios";
 
 import type { Food } from "@/types/food";
 import type { Category } from "@/types/category";
+import type { CartItem } from "@/types/cartItems";
+import type { OrderItem } from "@/types/order";
 
 import MenuHeader from "@/components/menu/MenuHeader";
 import CategoryNav from "@/components/menu/CategoryNav";
@@ -12,50 +14,107 @@ import FoodGrid from "@/components/menu/FoodGrid";
 import FloatingCartBar from "@/components/menu/FloatingCartBar";
 import CartDrawer from "@/components/menu/CartDrawer";
 
-type CartItem = Food & { qty: number };
-
 export default function MenuPage() {
   const { tableNumber } = useParams();
 
+  const base = import.meta.env.VITE_API_URL ?? "";
+  const api = axios.create({ baseURL: base });
+
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [foods, setFoods] = useState<Food[]>([]);
-  const [cart, setCart] = useState<Record<string, CartItem>>({});
+
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
-
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const base = import.meta.env.VITE_API_URL ?? "";
+  const [orderLoading, setOrderLoading] = useState(true);
+  const [orderError, setOrderError] = useState<string | null>(null);
 
-    Promise.all([
-      axios.get<Category[]>(`${base}/api/categories`),
-      axios.get<Food[]>(`${base}/api/foods`),
-    ])
-      .then(([cats, foodsRes]) => {
-        const activeCats = cats.data
+  /*
+  ============================
+  TABLE NUMBER
+  ============================
+  */
+
+  const tableNum = Number(tableNumber?.replace("t-", ""));
+
+  /*
+  ============================
+  CREATE / GET ORDER
+  ============================
+  */
+
+  useEffect(() => {
+    if (!tableNum) return;
+
+    const initOrder = async () => {
+      try {
+        setOrderLoading(true);
+        setOrderError(null);
+
+        const res = await api.post("/api/orders", {
+          tableNumber: tableNum,
+        });
+
+        setOrderId(res.data._id);
+        setOrderItems(res.data.items ?? []);
+      } catch (err) {
+        console.error(err);
+        setOrderError("Failed to initialize order");
+      } finally {
+        setOrderLoading(false);
+      }
+    };
+
+    initOrder();
+  }, [tableNum]);
+  /*
+  ============================
+  LOAD MENU
+  ============================
+  */
+
+  useEffect(() => {
+    const loadMenu = async () => {
+      try {
+        const [catsRes, foodsRes] = await Promise.all([
+          api.get<Category[]>("/api/categories"),
+          api.get<Food[]>("/api/foods"),
+        ]);
+
+        const activeCats = catsRes.data
           .filter((c) => c.isActive)
           .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
         setCategories(activeCats);
         setFoods(foodsRes.data);
 
-        if (activeCats.length) setActiveCategory(activeCats[0]._id);
+        if (activeCats.length) {
+          setActiveCategory(activeCats[0]._id);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to load menu data:", err);
-        setLoading(false);
-        // Consider adding error state to display user-friendly message
-      });
+      }
+    };
+
+    loadMenu();
   }, []);
+
+  /*
+  ============================
+  GROUP FOODS
+  ============================
+  */
 
   const foodsByCategory = useMemo(() => {
     const map: Record<string, Food[]> = {};
 
-    categories.forEach((c) => {
-      map[c._id] = [];
-    });
+    categories.forEach((c) => (map[c._id] = []));
 
     foods.forEach((f) => {
       const categoryId =
@@ -69,25 +128,76 @@ export default function MenuPage() {
     return map;
   }, [categories, foods]);
 
-  const addToCart = useCallback((food: Food) => {
-    setCart((prev) => ({
-      ...prev,
-      [food._id]: { ...food, qty: (prev[food._id]?.qty ?? 0) + 1 },
-    }));
-  }, []);
+  /*
+  ============================
+  ORDER ACTIONS
+  ============================
+  */
 
-  const removeFromCart = useCallback((id: string) => {
-    setCart((prev) => {
-      if (!prev[id] || prev[id].qty <= 1) {
-        const { [id]: _, ...rest } = prev;
-        return rest;
-      }
-      return { ...prev, [id]: { ...prev[id], qty: prev[id].qty - 1 } };
+  const addToCart = async (food: Food) => {
+    if (orderLoading || !orderId) {
+      console.warn("Order not ready");
+      return;
+    }
+
+    const res = await api.post(`/api/orders/${orderId}/items`, {
+      foodId: food._id,
+      quantity: 1,
     });
-  }, []);
 
-  const cartItems = Object.values(cart);
+    setOrderItems(res.data.items);
+  };
+
+  const updateQty = async (itemId: string, quantity: number) => {
+    if (orderLoading || !orderId) return;
+    const res = await api.patch(`/api/orders/${orderId}/items/${itemId}`, {
+      quantity,
+    });
+
+    setOrderItems(res.data.items);
+  };
+
+  const removeItem = async (itemId: string) => {
+    if (orderLoading || !orderId) return;
+    const res = await api.delete(`/api/orders/${orderId}/items/${itemId}`);
+
+    setOrderItems(res.data.items);
+  };
+
+  /*
+  ============================
+  CART COMPUTATION
+  ============================
+  */
+
+  const cartItems: CartItem[] = useMemo(() => {
+    return orderItems.map((item) => {
+      const foodId =
+        typeof item.food === "string"
+          ? item.food
+          : (item.food?._id ?? item.foodId);
+
+      const food = foods.find((f) => f._id === foodId);
+
+      return {
+        _id: item._id,
+
+        // Prefer order snapshot
+        name: item.name || food?.name || "Unknown",
+
+        // Prefer order snapshot
+        price: item.price ?? food?.price ?? 0,
+
+        // Only UI decoration
+        imageUrl: food?.imageUrl,
+
+        qty: item.quantity,
+      };
+    });
+  }, [orderItems, foods]);
+
   const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
+
   const cartTotal = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
 
   if (loading) return <div>Loading...</div>;
@@ -97,6 +207,14 @@ export default function MenuPage() {
     : [];
 
   const activeCat = categories.find((c) => c._id === activeCategory);
+
+  if (orderLoading) {
+    return <div>Starting order...</div>;
+  }
+
+  if (orderError) {
+    return <div>{orderError}</div>;
+  }
 
   return (
     <div className="min-h-screen pb-28">
@@ -116,9 +234,9 @@ export default function MenuPage() {
 
       <FoodGrid
         foods={activeFoods}
-        cart={cart}
+        orderItems={orderItems}
         addToCart={addToCart}
-        removeFromCart={removeFromCart}
+        updateQty={updateQty}
       />
 
       <FloatingCartBar
@@ -132,8 +250,8 @@ export default function MenuPage() {
         setOpen={setCartOpen}
         cartItems={cartItems}
         cartTotal={cartTotal}
-        addToCart={addToCart}
-        removeFromCart={removeFromCart}
+        updateQty={updateQty}
+        removeItem={removeItem}
         tableNumber={tableNumber}
       />
     </div>

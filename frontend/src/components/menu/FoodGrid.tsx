@@ -1,20 +1,21 @@
-import FoodCard from "./FoodCard";
+import type { OrderItem } from "@/types/order";
 import type { Food } from "@/types/food";
+import FoodCard from "./FoodCard";
 
 type Props = {
   foods: Food[];
-  cart: Record<string, any>;
-  addToCart: (food: Food) => void;
-  removeFromCart: (id: string) => void;
+  orderItems: OrderItem[];
+  addToCart: (food: Food) => Promise<void>;
+  updateQty: (itemId: string, quantity: number) => Promise<void>;
 };
 
 export default function FoodGrid({
   foods,
-  cart,
+  orderItems,
   addToCart,
-  removeFromCart,
+  updateQty,
 }: Props) {
-  if (!foods.length) {
+  if (foods.length === 0) {
     return (
       <p className="text-center py-20 text-muted-foreground">Không có món</p>
     );
@@ -22,15 +23,26 @@ export default function FoodGrid({
 
   return (
     <main className="max-w-3xl mx-auto px-4 pt-4 grid sm:grid-cols-2 gap-4">
-      {foods.map((food) => (
-        <FoodCard
-          key={food._id}
-          food={food}
-          qty={cart[food._id]?.qty ?? 0}
-          addToCart={addToCart}
-          removeFromCart={removeFromCart}
-        />
-      ))}
+      {foods.map((food) => {
+        const item = orderItems.find((i) => {
+          const foodId = typeof i.food === "string" ? i.food : i.food?._id;
+          return foodId === food._id;
+        });
+
+        const qty = item?.quantity ?? 0;
+        const itemId = item?._id;
+
+        return (
+          <FoodCard
+            key={food._id}
+            food={food}
+            qty={qty}
+            itemId={itemId}
+            addToCart={addToCart}
+            updateQty={updateQty}
+          />
+        );
+      })}
     </main>
   );
 }
