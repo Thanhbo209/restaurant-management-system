@@ -24,7 +24,10 @@ export default function FoodGrid({
   return (
     <main className="max-w-3xl mx-auto px-4 pt-4 grid sm:grid-cols-2 gap-4">
       {foods.map((food) => {
-        const item = orderItems.find((i) => i.food._id === food._id);
+        const item = orderItems.find((i) => {
+          const foodId = typeof i.food === "string" ? i.food : i.food?._id;
+          return foodId === food._id;
+        });
 
         const qty = item?.quantity ?? 0;
         const itemId = item?._id;

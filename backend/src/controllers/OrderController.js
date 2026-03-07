@@ -57,7 +57,7 @@ export default class OrderController {
   // POST /api/orders
   static async create(req, res) {
     try {
-      const { tableNumber, staffId } = req.body ?? {};
+      const { tableNumber } = req.body ?? {};
 
       if (!tableNumber) {
         return res.status(400).json({ message: "tableNumber is required" });
@@ -79,7 +79,7 @@ export default class OrderController {
 
       const order = await Order.create({
         table: table._id,
-        staff: staffId ?? null,
+        staff: req.user?._id ?? null,
         status: "pending",
       });
 
@@ -98,6 +98,12 @@ export default class OrderController {
     try {
       const { id } = req.params;
       const { foodId, quantity = 1, note } = req.body ?? {};
+
+      if (!Number.isInteger(quantity) || quantity <= 0) {
+        return res
+          .status(400)
+          .json({ message: "quantity must be a positive integer" });
+      }
 
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ message: "Invalid order id" });
@@ -145,6 +151,7 @@ export default class OrderController {
 
       if (typeof quantity === "number") {
         if (quantity <= 0) {
+          order.totalAmount -= item.price * item.quantity;
           item.deleteOne();
         } else {
           const diff = quantity - item.quantity;

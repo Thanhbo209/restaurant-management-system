@@ -30,6 +30,9 @@ export default function MenuPage() {
   const [cartOpen, setCartOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const [orderLoading, setOrderLoading] = useState(true);
+  const [orderError, setOrderError] = useState<string | null>(null);
+
   /*
   ============================
   TABLE NUMBER
@@ -49,6 +52,9 @@ export default function MenuPage() {
 
     const initOrder = async () => {
       try {
+        setOrderLoading(true);
+        setOrderError(null);
+
         const res = await api.post("/api/orders", {
           tableNumber: tableNum,
         });
@@ -57,12 +63,14 @@ export default function MenuPage() {
         setOrderItems(res.data.items ?? []);
       } catch (err) {
         console.error(err);
+        setOrderError("Failed to initialize order");
+      } finally {
+        setOrderLoading(false);
       }
     };
 
     initOrder();
   }, [tableNum]);
-
   /*
   ============================
   LOAD MENU
@@ -127,7 +135,10 @@ export default function MenuPage() {
   */
 
   const addToCart = async (food: Food) => {
-    if (!orderId) return;
+    if (orderLoading || !orderId) {
+      console.warn("Order not ready");
+      return;
+    }
 
     const res = await api.post(`/api/orders/${orderId}/items`, {
       foodId: food._id,
@@ -138,8 +149,7 @@ export default function MenuPage() {
   };
 
   const updateQty = async (itemId: string, quantity: number) => {
-    if (!orderId) return;
-
+    if (orderLoading || !orderId) return;
     const res = await api.patch(`/api/orders/${orderId}/items/${itemId}`, {
       quantity,
     });
@@ -148,8 +158,7 @@ export default function MenuPage() {
   };
 
   const removeItem = async (itemId: string) => {
-    if (!orderId) return;
-
+    if (orderLoading || !orderId) return;
     const res = await api.delete(`/api/orders/${orderId}/items/${itemId}`);
 
     setOrderItems(res.data.items);
@@ -163,15 +172,25 @@ export default function MenuPage() {
 
   const cartItems: CartItem[] = useMemo(() => {
     return orderItems.map((item) => {
-      const foodId = typeof item.food === "string" ? item.food : item.food?._id;
+      const foodId =
+        typeof item.food === "string"
+          ? item.food
+          : (item.food?._id ?? item.foodId);
 
       const food = foods.find((f) => f._id === foodId);
 
       return {
         _id: item._id,
-        name: food?.name ?? "Unknown",
-        price: food?.price ?? 0,
+
+        // Prefer order snapshot
+        name: item.name || food?.name || "Unknown",
+
+        // Prefer order snapshot
+        price: item.price ?? food?.price ?? 0,
+
+        // Only UI decoration
         imageUrl: food?.imageUrl,
+
         qty: item.quantity,
       };
     });
@@ -188,6 +207,14 @@ export default function MenuPage() {
     : [];
 
   const activeCat = categories.find((c) => c._id === activeCategory);
+
+  if (orderLoading) {
+    return <div>Starting order...</div>;
+  }
+
+  if (orderError) {
+    return <div>{orderError}</div>;
+  }
 
   return (
     <div className="min-h-screen pb-28">
